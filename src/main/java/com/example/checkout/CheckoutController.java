@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -19,6 +20,6 @@ public class CheckoutController {
 
     @PostMapping("checkout")
     public float checkout(@RequestBody List<String> watchIds) {
-        return this.checkoutService.calculateTotalPrice(watchIds);
+        return this.checkoutService.calculateTotalPrice(watchIds).floatValue();
     }
 }

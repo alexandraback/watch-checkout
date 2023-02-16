@@ -3,6 +3,7 @@ package com.example.checkout;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,10 +17,10 @@ public class CheckoutService {
     }
 
     public List<WatchCatalogModel> getWatchCatalog(){
-       return this.checkoutRepository.getCatalog();
+        return this.checkoutRepository.getCatalog();
     }
 
-    public float calculateTotalPrice(List<String> watchIds) {
+    public BigDecimal calculateTotalPrice(List<String> watchIds) {
         List<WatchCatalogModel> matchingWatches = this.checkoutRepository.retriveWatches(watchIds);
         Map<String, Integer> aggrigatedWatches = aggregateWatchesById(watchIds);
         return getTotalPrice(aggrigatedWatches, matchingWatches);
@@ -37,20 +38,23 @@ public class CheckoutService {
         return result;
     }
 
-    private float getTotalPrice(Map<String, Integer> watchIdToQuantity, List<WatchCatalogModel> watchCatalogModel ) {
+    private BigDecimal getTotalPrice(Map<String, Integer> watchIdToQuantity, List<WatchCatalogModel> watchCatalogModel) {
         return watchCatalogModel.stream()
-                .map(s -> {
-                    if (watchIdToQuantity.containsKey(s.watchId())) {
-                        int quantity = watchIdToQuantity.get(s.watchId());
-                        if(quantity == 1) {
-                            return (float)s.unitPrice();
-                        }
-                        int amountOfDiscountPackages = quantity / s.discountQuantity();
-                        int unDiscountedWatches = quantity % s.discountQuantity();
-                        return (unDiscountedWatches * s.unitPrice()) + (s.unitPrice() * (1 - s.discountFactor()) * amountOfDiscountPackages * s.discountQuantity());
-                    } else {
-                        return 0.0f;
+                .filter(watch -> watchIdToQuantity.containsKey(watch.watchId()))
+                .map(watch -> {
+                    int quantity = watchIdToQuantity.get(watch.watchId());
+                    int amountOfDiscountPackages = quantity / watch.discountQuantity();
+                    int unDiscountedWatches = quantity % watch.discountQuantity();
+                    if (quantity == 1) {
+                        unDiscountedWatches = 1;
                     }
-                }).reduce(0.0f, Float::sum);
+                    BigDecimal unDiscountedPrice = BigDecimal.valueOf(unDiscountedWatches).multiply(BigDecimal.valueOf(watch.unitPrice()));
+                    BigDecimal discountedPrice = BigDecimal.valueOf(amountOfDiscountPackages)
+                            .multiply(BigDecimal.valueOf(watch.unitPrice()).multiply(BigDecimal.valueOf(1).subtract(BigDecimal.valueOf(watch.discountFactor())))
+                                            .multiply(BigDecimal.valueOf(watch.discountQuantity())));
+                    return unDiscountedPrice.add(discountedPrice);
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
 }
