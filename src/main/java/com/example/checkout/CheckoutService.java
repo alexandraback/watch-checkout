@@ -15,7 +15,17 @@ public class CheckoutService {
         this.checkoutRepository = checkoutRepository;
     }
 
-    private Map<String, Integer> sumWatchesById(List<String> watchIds) {
+    public List<WatchCatalogModel> getWatchCatalog(){
+       return this.checkoutRepository.getCatalog();
+    }
+
+    public float calculateTotalPrice(List<String> watchIds) {
+        List<WatchCatalogModel> matchingWatches = this.checkoutRepository.retriveWatches(watchIds);
+        Map<String, Integer> aggrigatedWatches = aggregateWatchesById(watchIds);
+        return getTotalPrice(aggrigatedWatches, matchingWatches);
+    }
+
+    private Map<String, Integer> aggregateWatchesById(List<String> watchIds) {
         Map<String, Integer> result = new HashMap<>();
         for (String watchId : watchIds) {
             if (result.containsKey(watchId)) {
@@ -27,15 +37,20 @@ public class CheckoutService {
         return result;
     }
 
-    public int calculateTotalPrice(Map<String, Integer> watchIdToQuantity, List<WatchCatalogModel> watchCatalogModel ) {
+    private float getTotalPrice(Map<String, Integer> watchIdToQuantity, List<WatchCatalogModel> watchCatalogModel ) {
         return watchCatalogModel.stream()
                 .map(s -> {
                     if (watchIdToQuantity.containsKey(s.watchId())) {
                         int quantity = watchIdToQuantity.get(s.watchId());
-                        return 1;
+                        if(quantity == 1) {
+                            return (float)s.unitPrice();
+                        }
+                        int amountOfDiscountPackages = quantity / s.discountQuantity();
+                        int unDiscountedWatches = quantity % s.discountQuantity();
+                        return (unDiscountedWatches * s.unitPrice()) + (s.unitPrice() * (1 - s.discountFactor()) * amountOfDiscountPackages * s.discountQuantity());
                     } else {
-                        return 0;
+                        return 0.0f;
                     }
-                }).reduce(0, Integer::sum);
+                }).reduce(0.0f, Float::sum);
     }
 }

@@ -13,7 +13,6 @@ import java.sql.SQLException;
 @Configuration
 public class CheckoutApplicationAppConfig {
 
-
     @Value("${spring.datasource.url}")
     private String dataSourceUrl;
 
@@ -33,7 +32,7 @@ public class CheckoutApplicationAppConfig {
     private long dataSourceConnectionTimeout;
 
     @Bean
-    public HikariDataSource dataSource() throws SQLException {
+    public HikariDataSource dataSource() {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(dataSourceUrl);
         dataSource.setUsername(dataSourceUsername);
@@ -41,8 +40,6 @@ public class CheckoutApplicationAppConfig {
         dataSource.setDriverClassName(dataSourceDriverClassName);
         dataSource.setMaximumPoolSize(dataSourceMaximumPoolSize);
         dataSource.setConnectionTimeout(dataSourceConnectionTimeout);
-
-        migrateDb(dataSource);
 
         return dataSource;
     }
@@ -52,15 +49,15 @@ public class CheckoutApplicationAppConfig {
         return new JdbcTemplate(dataSource);
     }
 
-    private static void migrateDb(DataSource dataSource) throws SQLException {
-        Flyway.configure()
-                .dataSource(dataSource)
-                .locations("db/postgresql")
-                .baselineOnMigrate(true)
-                .load()
-                .migrate();
 
-        dataSource.getConnection().close();
+    @Bean
+    public Flyway flyway() throws SQLException {
+        Flyway flyway = Flyway.configure()
+                .dataSource(dataSource())
+                .locations("classpath:db/postgresql")
+                .load();
+        flyway.migrate();
+        return flyway;
     }
 
 

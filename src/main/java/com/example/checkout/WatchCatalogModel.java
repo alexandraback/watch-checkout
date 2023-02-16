@@ -4,6 +4,6 @@ public record WatchCatalogModel(
         String watchId,
         String name,
         int unitPrice,
-        Integer discountQuantity,
-        Integer discountPrice
+        int discountQuantity,
+        float discountFactor
         ) {}

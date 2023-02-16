@@ -18,8 +18,7 @@ public class CheckoutController {
     }
 
     @PostMapping("checkout")
-    public int checkout(@RequestBody List<String> watchIds) {
-        //this.checkoutService.calculateTotalPrice(watchIds);
-        return 0;
+    public float checkout(@RequestBody List<String> watchIds) {
+        return this.checkoutService.calculateTotalPrice(watchIds);
     }
 }
