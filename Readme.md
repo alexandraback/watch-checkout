@@ -1,10 +1,14 @@
 # Checkout App
 
 Simple checkout app built using Spring boot framework.
-Application is built in a multi staged docker build 
+Application is built in a multistaged docker build 
 and hence can be both build and run by running from root folder.
-```bash
-docker build -t app .
+
+For building fatjar a docker file that compatible with M2 processor is used, i.e. using
+ARM64 architecture. If you are experiencing issues during docker build process replace
+the builder base image with
+```Dockerfile
+FROM gradle:7.6.0-jdk17 as builder
 ```
 
 ## Build
@@ -26,3 +30,7 @@ curl -X POST -H "Content-Type: application/json" \                              
     localhost:8080/checkout
 
 ```
+
+## Further improvements
+-- Add e2e test(s)
+-- Add integration test(s)
