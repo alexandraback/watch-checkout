@@ -11,4 +11,13 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - '5432:5432'
+  app:
+    depends_on:
+      - db
+    container_name: app
+    build: .
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postgres
+    ports:
+      - '8080:8080'
 
