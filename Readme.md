@@ -2,7 +2,7 @@
 
 Simple checkout app built using Spring boot framework.
 Application is built in a multistaged docker build 
-and hence can be both build and run by running from root folder.
+and hence can be both build and run by running docker build and docker run.
 
 For building fatjar a docker file that compatible with M2 processor is used, i.e. using
 ARM64 architecture. If you are experiencing issues during docker build process replace
