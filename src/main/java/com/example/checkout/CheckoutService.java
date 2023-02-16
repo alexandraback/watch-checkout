@@ -16,17 +16,13 @@ public class CheckoutService {
         this.checkoutRepository = checkoutRepository;
     }
 
-    public List<WatchCatalogModel> getWatchCatalog(){
-        return this.checkoutRepository.getCatalog();
-    }
-
     public BigDecimal calculateTotalPrice(List<String> watchIds) {
         List<WatchCatalogModel> matchingWatches = this.checkoutRepository.retriveWatches(watchIds);
         Map<String, Integer> aggrigatedWatches = aggregateWatchesById(watchIds);
         return getTotalPrice(aggrigatedWatches, matchingWatches);
     }
 
-    private Map<String, Integer> aggregateWatchesById(List<String> watchIds) {
+    protected static Map<String, Integer> aggregateWatchesById(List<String> watchIds) {
         Map<String, Integer> result = new HashMap<>();
         for (String watchId : watchIds) {
             if (result.containsKey(watchId)) {
@@ -38,7 +34,7 @@ public class CheckoutService {
         return result;
     }
 
-    private BigDecimal getTotalPrice(Map<String, Integer> watchIdToQuantity, List<WatchCatalogModel> watchCatalogModel) {
+    protected static BigDecimal getTotalPrice(Map<String, Integer> watchIdToQuantity, List<WatchCatalogModel> watchCatalogModel) {
         return watchCatalogModel.stream()
                 .filter(watch -> watchIdToQuantity.containsKey(watch.watchId()))
                 .map(watch -> {
@@ -49,12 +45,18 @@ public class CheckoutService {
                         unDiscountedWatches = 1;
                     }
                     BigDecimal unDiscountedPrice = BigDecimal.valueOf(unDiscountedWatches).multiply(BigDecimal.valueOf(watch.unitPrice()));
+                    BigDecimal discountedUnitPrice = calculateDiscount(watch.unitPrice(), watch.discountFactor());
                     BigDecimal discountedPrice = BigDecimal.valueOf(amountOfDiscountPackages)
-                            .multiply(BigDecimal.valueOf(watch.unitPrice()).multiply(BigDecimal.valueOf(1).subtract(BigDecimal.valueOf(watch.discountFactor())))
-                                            .multiply(BigDecimal.valueOf(watch.discountQuantity())));
+                            .multiply(discountedUnitPrice)
+                            .multiply(BigDecimal.valueOf(watch.discountQuantity()));
                     return unDiscountedPrice.add(discountedPrice);
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    protected static BigDecimal calculateDiscount(int unitPrice, float discountFactor) {
+        BigDecimal discount = BigDecimal.valueOf(1).subtract(BigDecimal.valueOf(discountFactor));
+        return BigDecimal.valueOf(unitPrice).multiply(discount);
     }
 
 }

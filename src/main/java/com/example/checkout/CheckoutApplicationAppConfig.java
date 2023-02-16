@@ -8,7 +8,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
-import java.sql.SQLException;
 
 @Configuration
 public class CheckoutApplicationAppConfig {
@@ -51,7 +50,7 @@ public class CheckoutApplicationAppConfig {
 
 
     @Bean
-    public Flyway flyway() throws SQLException {
+    public Flyway flyway() {
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource())
                 .locations("classpath:db/postgresql")

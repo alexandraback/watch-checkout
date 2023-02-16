@@ -22,17 +22,15 @@ public class CheckoutRepository {
     public List<WatchCatalogModel> retriveWatches(List<String> watchIds) {
         List<Integer> idInts = watchIds.stream()
                 .map(Integer::parseInt)
-                .collect(Collectors.toList());
+                .toList();
+
         String sql = "SELECT * FROM WATCH_CATALOG WHERE ID IN (%s)";
-        String idList = String.join(",", Collections.nCopies(idInts.size(), "?"));
+        String idList = watchIds.stream()
+                .map(v ->"?" )
+                .collect(Collectors.joining(","));
         sql = String.format(sql, idList);
         return db.query(sql, idInts.toArray(), (rs, row) -> mapToWatchCatalogModel(rs));
     }
-    public List<WatchCatalogModel> getCatalog() {
-        String sql = "SELECT * FROM WATCH_CATALOG";
-        return this.db.query(sql, (rs,row) -> mapToWatchCatalogModel(rs));
-    }
-
 
 
     private static WatchCatalogModel mapToWatchCatalogModel(ResultSet rs) throws SQLException {
